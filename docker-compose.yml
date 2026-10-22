@@ -1,0 +1,25 @@
+services:
+  php2shell:
+    image: php:8.4.26-apache
+    platform: linux/amd64
+    container_name: php2shell-final
+    ports:
+      - "8860:80"
+    volumes:
+      - ./html:/var/www/html:ro
+    command:
+      - bash
+      - -c
+      - |
+        printf 'memory_limit=8M\npost_max_size=64M\nupload_max_filesize=64M\nsession.save_path=/tmp\nsession.use_strict_mode=0\n' > /usr/local/etc/php/conf.d/z.ini
+        cat > /etc/apache2/conf-enabled/zzz.conf << 'CONF'
+        KeepAlive Off
+        <IfModule mpm_prefork_module>
+            StartServers 1
+            MinSpareServers 1
+            MaxSpareServers 1
+            MaxRequestWorkers 1
+            ServerLimit 1
+        </IfModule>
+        CONF
+        exec apache2-foreground
